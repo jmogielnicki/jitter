@@ -110,7 +110,7 @@ function Anchor() {
   this.x = mouseX;
   this.y = mouseY;
   this.diameter = 50;
-  var anchorRedFill = 0;
+  var anchorRedFill = 154;
   var goUp = true;
 
   this.display = function() {
@@ -128,6 +128,7 @@ function Anchor() {
     }
 
     fill(anchorRedFill, 0, 0);
+    this.diameter = (anchorRedFill/20)+30;
     ellipse(this.x, this.y, this.diameter, this.diameter);
   }
 
