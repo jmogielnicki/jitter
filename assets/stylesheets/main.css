@@ -1,0 +1,21 @@
+
+#canvasContainer {
+    width: 100%;
+}
+
+#defaultCanvas {
+	display: block;
+	margin: 0 auto;
+}
+
+
+
+#outerControls {
+    width: 100%;
+}
+
+#controls {
+	width: 40%;
+	display: block;
+	margin: 0 auto;
+}
