@@ -14,7 +14,6 @@ var switchModeButton;
 var modeCurrent = 0;
 var firstTimeSwitch = true;
 
-
 function setup() {
   canvas = createCanvas(800, 500);
   canvas.parent('canvasContainer');
@@ -63,14 +62,14 @@ function draw() {
     bug = bugList[i];
     bug.move();
     bug.display();
-    if  (eraser === true && mouseIsPressed && dist(bug.x,bug.y,mouseX,mouseY) < 10){
+    if  (eraser === true && mouseIsPressed && dist(bug.x, bug.y, mouseX, mouseY) < 10){
       bugList.splice(i, 1);
     }
   }
   for (i = 0; i < anchorList.length; i++) {
     anchor = anchorList[i];
     anchor.display();
-    if  (eraser === true && mouseIsPressed && dist(anchor.x,anchor.y,mouseX,mouseY) < 10){
+    if  (eraser === true && mouseIsPressed && dist(anchor.x, anchor.y, mouseX, mouseY) < 10){
       anchorList.splice(i, 1);
     }
   }
@@ -105,8 +104,6 @@ function eraseEverything() {
 }
 
 function Anchor() {
-  var anchorXPos = this.x;
-  var anchorYPos = this.y;
   this.x = mouseX;
   this.y = mouseY;
   this.diameter = 50;
@@ -141,16 +138,15 @@ function Jitter() {
   this.speed = 1;
 
   this.move = function() {
-    var d;
     var anchorX;
     var anchorY;
     var prevDistance;
     var activeAnchorX = width/2;
     var activeAnchorY = height/2;
 
-    for (var i = 0; anchorList.length; i++) {
+    for (var i = 0; i < anchorList.length; i++) {
       anchor = anchorList[i];
-      print(anchorList[i]);
+      // print(anchorList[i]);
       var currDistance = dist(this.x, this.y, anchor.x, anchor.y);
       if (prevDistance === 0 || currDistance <= prevDistance) {
         activeAnchorX = anchor.x;
@@ -159,10 +155,10 @@ function Jitter() {
       }
     }
     if (anchorList.length > 0) {
+      print("YAY!")
       this.x = activeAnchorX;
       this.y = activeAnchorY;
     }
-
 
     this.x += random(-randomness/10, randomness/10);
     this.y += random(-randomness/10, randomness/10);
