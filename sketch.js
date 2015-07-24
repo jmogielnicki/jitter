@@ -9,10 +9,13 @@ var slider;
 var eraser = false;
 var anchorOn = false;
 var onCanvas;
-var randomness = 1;
+var randomness = 10;
 var switchModeButton;
 var modeCurrent = 0;
 var firstTimeSwitch = true;
+var activeAnchorX = 200;
+var activeAnchorY = 200;
+
 
 function setup() {
   canvas = createCanvas(800, 500);
@@ -21,7 +24,7 @@ function setup() {
   canvas.mouseOut( function() { onCanvas = false; });
   // Create object
   bug = new Jitter();
-  slider = createSlider(0, 100, 20);
+  slider = createSlider(1, 1000, 200);
   slider.parent('controls');
   slider.html("test");
   anchorButton = createButton("Set Anchor");
@@ -138,15 +141,10 @@ function Jitter() {
   this.speed = 1;
 
   this.move = function() {
-    var anchorX;
-    var anchorY;
-    var prevDistance;
-    var activeAnchorX = width/2;
-    var activeAnchorY = height/2;
-
+    var prevDistance = 0;
+    // print(anchorList.length); 
     for (var i = 0; i < anchorList.length; i++) {
       anchor = anchorList[i];
-      // print(anchorList[i]);
       var currDistance = dist(this.x, this.y, anchor.x, anchor.y);
       if (prevDistance === 0 || currDistance <= prevDistance) {
         activeAnchorX = anchor.x;
@@ -154,14 +152,13 @@ function Jitter() {
         prevDistance = currDistance;
       }
     }
-    if (anchorList.length > 0) {
-      print("YAY!")
-      this.x = activeAnchorX;
-      this.y = activeAnchorY;
+    if(anchorList.length === 0) {
+      activeAnchorX = this.x;
+      activeAnchorY = this.y;
     }
 
-    this.x += random(-randomness/10, randomness/10);
-    this.y += random(-randomness/10, randomness/10);
+    this.x = (this.x*100 + activeAnchorX + random(-randomness, randomness))/101;
+    this.y = (this.y*100 + activeAnchorY + random(-randomness, randomness))/101;
   };
 
   this.display = function() {
