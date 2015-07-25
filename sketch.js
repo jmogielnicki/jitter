@@ -5,11 +5,11 @@ var anchorList = [];
 var drawButton;
 var eraseAllButton;
 var anchorButton;
-var slider;
+var randomSlider;
 var eraser = false;
 var anchorOn = false;
 var onCanvas;
-var randomness = 10;
+var randomness = 100;
 var switchModeButton;
 var modeCurrent = 0;
 var firstTimeSwitch = true;
@@ -24,9 +24,9 @@ function setup() {
   canvas.mouseOut( function() { onCanvas = false; });
   // Create object
   bug = new Jitter();
-  slider = createSlider(1, 1000, 200);
-  slider.parent('controls');
-  slider.html("test");
+  randomSlider = createSlider(1, 1000, 200);
+  randomSlider.parent('controls');
+  randomSlider.html("test");
   anchorButton = createButton("Set Anchor");
   anchorButton.parent('controls');
   anchorButton.mousePressed(function() { anchorOn = true; });
@@ -55,7 +55,7 @@ function setup() {
 
 function draw() {
   changeMode();
-  randomness = slider.value();
+  randomness = randomSlider.value();
   if (eraser === false && anchorOn === false && mouseIsPressed && onCanvas === true) {
     bugList.push(new Jitter());
   } else if (eraser === false && anchorOn === true && mouseIsPressed && onCanvas === true) {
@@ -139,18 +139,25 @@ function Jitter() {
   this.x = mouseX;
   this.y = mouseY;
   this.diameter = random(10, 30);
-  this.speed = 1;
+  var attracted = false;
+
 
   this.move = function() {
-    var prevDistance = 0;
+    var moveRandomness = randomness*abs(randomGaussian());
+    var moveRandomness = randomness*abs(randomGaussian());
+    var prevDistance = -1;
+    var attracted = false;
     // print(anchorList.length); 
     for (var i = 0; i < anchorList.length; i++) {
       anchor = anchorList[i];
       var currDistance = dist(this.x, this.y, anchor.x, anchor.y);
-      if (prevDistance === 0 || currDistance <= prevDistance) {
+      if (prevDistance === -1 || currDistance <= prevDistance) {
         activeAnchorX = anchor.x;
         activeAnchorY = anchor.y;
         prevDistance = currDistance;
+        if(currDistance<200) {
+          attracted = true;
+        }
       }
     }
     if(anchorList.length === 0) {
@@ -158,8 +165,15 @@ function Jitter() {
       activeAnchorY = this.y;
     }
 
-    this.x = (this.x*100 + activeAnchorX + random(-randomness, randomness))/101;
-    this.y = (this.y*100 + activeAnchorY + random(-randomness, randomness))/101;
+    if (attracted === true) {
+      this.x = (this.x*100 + ((activeAnchorX)) + random(-moveRandomness, moveRandomness))/(101);
+      this.y = (this.y*100 + ((activeAnchorY)) + random(-moveRandomness, moveRandomness))/(101);
+    } else {
+      this.x = (this.x*100 + random(-moveRandomness, moveRandomness))/(100);
+      this.y = (this.y*100 + random(-moveRandomness, moveRandomness))/(100);
+    }
+
+
   };
 
   this.display = function() {
