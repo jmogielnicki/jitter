@@ -166,8 +166,8 @@ function Jitter() {
     }
 
     if (attracted === true) {
-      this.x = (this.x*100 + ((activeAnchorX)) + random(-moveRandomness, moveRandomness))/(101);
-      this.y = (this.y*100 + ((activeAnchorY)) + random(-moveRandomness, moveRandomness))/(101);
+      this.x = (this.x*200 + ((activeAnchorX)) + (random(-moveRandomness, moveRandomness)*100))/(301);
+      this.y = (this.y*200 + ((activeAnchorY)) + (random(-moveRandomness, moveRandomness)*100))/(301);
     } else {
       this.x = (this.x*100 + random(-moveRandomness, moveRandomness))/(100);
       this.y = (this.y*100 + random(-moveRandomness, moveRandomness))/(100);
