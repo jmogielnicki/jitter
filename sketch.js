@@ -51,6 +51,10 @@ function draw() {
       rectMode(CENTER);
       rect(mouseX, mouseY, 40, 40);
       break;
+    case 'repulsor':
+      fill(255, 255, 255, 150);
+      ellipse(mouseX, mouseY, 60, 60);
+      break;
   }
 
   if (mouseIsPressed && onCanvas === true) {
@@ -91,8 +95,10 @@ function createButtons() {
   makeButtons('Bugs', function() { thingType = 'bug'; });
   makeButtons('Anchor', function() { thingType = 'anchor'; });
   makeButtons('Eraser', function() { thingType = 'eraser'; });
+  makeButtons('Repulse', function() {thingType = 'repulsor'});
   makeButtons('Reset', eraseEverything);
   makeButtons('Switch Mode', function() { modeCurrent++; })
+
 
 };
 
@@ -164,13 +170,17 @@ function Jitter() {
   this.diameter = random(5, 15);
   var attracted = false;
 
-
   this.move = function() {
     var moveRandomness = randomness*abs(randomGaussian());
     var moveRandomness = randomness*abs(randomGaussian());
     var prevDistance = -1;
     var attracted = false;
-    // print(anchorList.length); 
+    var mouseDistX = this.x - mouseX;
+    var mouseDistY = this.y - mouseY;
+    var mouseDist = dist(mouseX, mouseY, this.x, this.y);
+    var mouseRepulseX = 30/mouseDistX;
+    var mouseRepulseY = 30/mouseDistY;
+
     for (var i = 0; i < anchorList.length; i++) {
       anchor = anchorList[i];
       var currDistance = dist(this.x, this.y, anchor.x, anchor.y);
@@ -178,17 +188,23 @@ function Jitter() {
         activeAnchorX = anchor.x;
         activeAnchorY = anchor.y;
         prevDistance = currDistance;
-        if(currDistance<200) {
+        if(currDistance<300) {
           attracted = true;
         }
       }
     }
+
     if(anchorList.length === 0) {
       activeAnchorX = this.x;
       activeAnchorY = this.y;
     }
 
-    if (attracted === true) {
+    if(thingType === 'repulsor' && mouseDist < 60) {
+      this.x += mouseRepulseX;
+      this.y += mouseRepulseY;
+    };
+
+    if(attracted === true) {
       this.x += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorX-this.x) * 0.005);
       this.y += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorY-this.y) * 0.005);
     } else {
