@@ -2,80 +2,102 @@ var canvas;
 var bug;  // Declare object
 var bugList = [];
 var anchorList = [];
-var drawButton;
 var eraseAllButton;
-var anchorButton;
+var thingType = 'bug';
 var randomSlider;
-var eraser = false;
-var anchorOn = false;
 var onCanvas;
-var randomness = 100;
+var randomness = 1;
 var switchModeButton;
 var modeCurrent = 0;
 var firstTimeSwitch = true;
 var activeAnchorX = 200;
 var activeAnchorY = 200;
+var bugColor = [255,255,255,255] 
+
 
 
 function setup() {
-  canvas = createCanvas(800, 500);
+  canvas = createCanvas(windowWidth-100, windowHeight-100);
   canvas.parent('canvasContainer');
   canvas.mouseOver(function() { onCanvas = true; });
   canvas.mouseOut( function() { onCanvas = false; });
   // Create object
   bug = new Jitter();
-  randomSlider = createSlider(1, 1000, 200);
+
+  createButtons();
+
+  randomSlider = createSlider(1, 1000, 500);
   randomSlider.parent('controls');
   randomSlider.html("test");
-  anchorButton = createButton("Set Anchor");
-  anchorButton.parent('controls');
-  anchorButton.mousePressed(function() { anchorOn = true; });
-  switchModeButton = createButton("Switch Mode");
-  switchModeButton.parent('controls');
-  switchModeButton.mousePressed(function() { modeCurrent++; });
-  eraseAllButton = createButton("Reset");
-  eraseAllButton.parent('controls');
-  eraseAllButton.mousePressed(eraseEverything)
-  drawButton = createButton("Eraser");
-  drawButton.parent('controls');
-  drawButton.mousePressed(
-    function() { 
-    if (eraser === false) {
-      drawButton.html('Bubbler');
-      cursor(HAND);
-    } else {
-      drawButton.html('Eraser');
-    }
-
-    eraser = !eraser;
-
-  });
+  
   // canvas.position(100,100);
 }
 
 function draw() {
   changeMode();
-  randomness = randomSlider.value();
-  if (eraser === false && anchorOn === false && mouseIsPressed && onCanvas === true) {
-    bugList.push(new Jitter());
-  } else if (eraser === false && anchorOn === true && mouseIsPressed && onCanvas === true) {
-    anchorList.push(new Anchor());
+  randomness = randomSlider.value()/100;
+
+  switch(thingType) {
+    case 'bug':
+      fill(250,250,250);
+      ellipse(mouseX, mouseY, 15, 15);
+      break;
+    case 'anchor':
+      fill(0,0,0);
+      ellipse(mouseX, mouseY, 40, 40);
+      break;
+    case 'eraser':
+      fill(255,255,255);
+      rectMode(CENTER);
+      rect(mouseX, mouseY, 40, 40);
+      break;
   }
+
+  if (mouseIsPressed && onCanvas === true) {
+    if (thingType === 'bug') {
+      bugList.push(new Jitter());
+    } else if (thingType === 'anchor') {
+      anchorList.push(new Anchor());
+    } 
+  }
+  
   for (i = 0; i < bugList.length; i++) {
     bug = bugList[i];
     bug.move();
     bug.display();
-    if  (eraser === true && mouseIsPressed && dist(bug.x, bug.y, mouseX, mouseY) < 10){
+    if  (thingType === 'eraser' && mouseIsPressed && dist(bug.x, bug.y, mouseX, mouseY) < 20){
       bugList.splice(i, 1);
     }
   }
   for (i = 0; i < anchorList.length; i++) {
     anchor = anchorList[i];
     anchor.display();
-    if  (eraser === true && mouseIsPressed && dist(anchor.x, anchor.y, mouseX, mouseY) < 10){
+    if  (thingType === 'eraser' && mouseIsPressed && dist(anchor.x, anchor.y, mouseX, mouseY) < 20){
       anchorList.splice(i, 1);
     }
   }
+}
+
+function makeButtons (text, method) {
+  button = createButton(text);
+  button.class('btn btn-default')
+  button.parent('controls');
+  button.mousePressed(method);
+};
+
+
+function createButtons() {
+  
+  makeButtons('Bugs', function() { thingType = 'bug'; });
+  makeButtons('Anchor', function() { thingType = 'anchor'; });
+  makeButtons('Eraser', function() { thingType = 'eraser'; });
+  makeButtons('Reset', eraseEverything);
+  makeButtons('Switch Mode', function() { modeCurrent++; })
+
+};
+
+function windowResized() {
+  resizeCanvas(windowWidth-100, windowHeight-100);
 }
 
 function changeMode() {
@@ -83,7 +105,8 @@ function changeMode() {
     modeCurrent = 0;
     firstTimeSwitch = true;
   } else if (modeCurrent === 0) {
-    background(50, 89, 100);
+    background(40, 40, 40);
+    bugColor = [255,255,255,255]
   } else if (modeCurrent === 1) {
     fill(255, 10); // semi-transparent white
     rect(-1, -1, width+2, height+2);
@@ -93,10 +116,10 @@ function changeMode() {
       firstTimeSwitch = false;
     }
     noStroke();
-    fill(255, 10); 
+    fill(255, 3); 
     rect(0, 0, width, height);
 
-    fill(0,100,255, 10); 
+    bugColor = [0,100,255,150]; 
   }
 };
 
@@ -128,7 +151,7 @@ function Anchor() {
     }
 
     fill(anchorRedFill, 0, 0);
-    this.diameter = (anchorRedFill/20)+30;
+    this.diameter = (anchorRedFill/20)+40;
     ellipse(this.x, this.y, this.diameter, this.diameter);
   }
 
@@ -138,7 +161,7 @@ function Anchor() {
 function Jitter() {
   this.x = mouseX;
   this.y = mouseY;
-  this.diameter = random(10, 30);
+  this.diameter = random(5, 15);
   var attracted = false;
 
 
@@ -166,18 +189,17 @@ function Jitter() {
     }
 
     if (attracted === true) {
-      this.x = (this.x*200 + ((activeAnchorX)) + (random(-moveRandomness, moveRandomness)*100))/(301);
-      this.y = (this.y*200 + ((activeAnchorY)) + (random(-moveRandomness, moveRandomness)*100))/(301);
+      this.x += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorX-this.x) * 0.005);
+      this.y += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorY-this.y) * 0.005);
     } else {
-      this.x = (this.x*100 + random(-moveRandomness, moveRandomness))/(100);
-      this.y = (this.y*100 + random(-moveRandomness, moveRandomness))/(100);
+      this.x += random(-moveRandomness, moveRandomness);
+      this.y += random(-moveRandomness, moveRandomness);
     }
-
-
   };
 
   this.display = function() {
     // this.diameter = this.diameter + random(-randomness/100, randomness/100);
+    fill(bugColor);
     ellipse(this.x, this.y, this.diameter, this.diameter);
 
   }
