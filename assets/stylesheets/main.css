@@ -16,4 +16,22 @@
 	width: 80%;
 	display: block;
 	margin: 0 auto;
+	margin-bottom: 15px;
+}
+
+#controls button {
+	margin-right: 15px;
+
+}
+
+#sliders {
+	width: 30%;
+	display: inline-block;
+	margin: 0 auto;
+}
+
+#sliders input {
+	width: 40%;
+	display: inline-block;
+	margin-right: 15px;
 }
