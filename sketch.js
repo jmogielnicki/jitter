@@ -6,7 +6,6 @@ var eraseAllButton;
 var thingType = 'bug';
 var randomSlider;
 var onCanvas;
-var randomness = 1;
 var switchModeButton;
 var modeCurrent = 0;
 var firstTimeSwitch = true;
@@ -14,22 +13,29 @@ var activeAnchorX = 200;
 var activeAnchorY = 200;
 var bugColor = [255,255,255,255]
 var bugOutline = [0,0,0,0]
+var backgroundTransparency = 255;
 var bugSize = 1;
 var bugOverallSpeed = 100;
 
 
 
 function setup() {
-  canvas = createCanvas(windowWidth-100, windowHeight-100);
+  // Canvas stuffs
+  canvas = createCanvas(windowWidth-100, windowHeight-120);
   canvas.parent('canvasContainer');
   canvas.mouseOver(function() { onCanvas = true; });
   canvas.mouseOut( function() { onCanvas = false; });
+
   // Create object
   bug = new Jitter();
+
+  // Make cursor disappear when in canvas
   noCursor();
 
+  // Create the buttons
   createButtons();
 
+  // Create the sliders
   randomSlider = createSlider(1, 1000, 500);
   randomSlider.parent('sliders');
   randomSlider.html('randomness');
@@ -37,21 +43,18 @@ function setup() {
   sizeSlider = createSlider(1, 50, 1)
   sizeSlider.parent('sliders');
   sizeSlider.html('size');
-  
-  noStroke();
-  // canvas.position(100,100);
 }
 
 function draw() {
-  changeMode();
-  randomness = randomSlider.value()/1000;
+  fill(20, 20, 20, backgroundTransparency);
+  rect(-1, -1, width+2, height+2);
   bugOverallSpeed = randomSlider.value()/800;
   bugSize = sizeSlider.value();
 
   // Just for the shape of the 
   switch(thingType) {
     case 'bug':
-      fill(250,250,250, 150);
+      fill(250,250,250,150);
       ellipse(mouseX, mouseY, 8, 8);
       break;
     case 'anchor':
@@ -99,7 +102,7 @@ function draw() {
 
 function makeButtons (text, method) {
   button = createButton(text);
-  button.class('btn btn-default')
+  button.class('btn btn-primary btn-sm')
   button.parent('controls');
   button.mousePressed(method);
 };
@@ -111,13 +114,13 @@ function createButtons() {
   makeButtons('Anchor', function() { thingType = 'anchor'; });
   makeButtons('Eraser', function() { thingType = 'eraser'; });
   makeButtons('Pusher', function() {thingType = 'repulsor'});
-  makeButtons('Switch Mode', function() { modeCurrent++; })
+  makeButtons('Switch Mode', function() { changeMode();})
   makeButtons('Reset', eraseEverything);
 
 };
 
 function windowResized() {
-  resizeCanvas(windowWidth-100, windowHeight-100);
+  resizeCanvas(windowWidth-100, windowHeight-120);
 }
 
 
@@ -129,31 +132,28 @@ function mouseClicked() {
 }
 
 function changeMode() {
+  modeCurrent++;
   if (modeCurrent > 2) {
     modeCurrent = 0;
-    firstTimeSwitch = true;
-  } else if (modeCurrent === 0) {
-    background(40, 40, 40);
+  } 
+  if (modeCurrent === 0) {
+    backgroundTransparency = 255;
     bugOutline = [0, 0, 0, 0]
     bugColor = [255,255,255,230]
   } else if (modeCurrent === 1) {
-    fill(255, 10); // semi-transparent white
-    bugOutline = [0, 0, 0, 255]
-    rect(-1, -1, width+2, height+2);
+    backgroundTransparency = 30;
+    bugOutline = [50, 50, 50, 255]
+    bugColor = [255,255,255,230]
+    // fill(255, 10); // semi-transparent white
+    // rect(-1, -1, width+2, height+2);
   } else if (modeCurrent === 2) {
-    if (firstTimeSwitch === true) {
-      background(255,255,255);
-      bugOutline = [0, 0, 255, 200]
-      firstTimeSwitch = false;
+    backgroundTransparency = 0;
+    bugOutline = [50, 50, 50, 255]
+    bugColor = [255,255,255,230]
+    // fill(0, 100); 
+    // rect(0, 0, width, height);
     }
 
-    noStroke();
-    fill(255, 3); 
-    rect(0, 0, width, height);
-
-    bugColor = [0,100,255,150]; 
-
-  }
 };
 
 function eraseEverything() {
@@ -170,25 +170,26 @@ function Anchor() {
   this.x = mouseX;
   this.y = mouseY;
   this.diameter = 10;
-  var anchorRedFill = 154;
+  var anchorRedFill = 0;
   var goUp = true;
 
   this.display = function() {
 
-    if (anchorRedFill > 154) {
+    if (anchorRedFill > 104) {
       goUp = false;
     } else if (anchorRedFill < 1) {
       goUp = true;
     }
 
     if (goUp === true) {
-      anchorRedFill = anchorRedFill+3
+      anchorRedFill = anchorRedFill+1
     } else {
-      anchorRedFill = anchorRedFill-3
+      anchorRedFill = anchorRedFill-1
     }
 
-    fill(anchorRedFill, 0, 0);
+    fill(anchorRedFill, anchorRedFill/2, 0);
     this.diameter = (anchorRedFill/20)+25;
+    noStroke();
     ellipse(this.x, this.y, this.diameter, this.diameter);
   }
 
@@ -202,6 +203,8 @@ function Jitter() {
   this.y = mouseY;
   this.bugRange = 200;
 
+  this.moveTimer = random(100, 1000);
+
   // Temp - testing perlin noise instead of randomness
   this.perlinXStartTime = random(0,10000);
   this.perlinYStartTime = random(0,10000);
@@ -214,14 +217,11 @@ function Jitter() {
 
   this.move = function() {
 
-    // Temp - testing perlin noise instead of randomness
     var perlinXValue = noise(this.perlinXStartTime);
     var perlinYValue = noise(this.perlinYStartTime);
     var bugXPos = map(perlinXValue, 0, 1, this.xAnchorPoint - this.bugRange, this.xAnchorPoint + this.bugRange);
     var bugYPos = map(perlinYValue, 0, 1, this.yAnchorPoint - this.bugRange, this.yAnchorPoint + this.bugRange);
 
-    var moveRandomness = randomness*abs(randomGaussian());
-    var moveRandomness = randomness*abs(randomGaussian());
     var prevDistance = -1;
     var attracted = false;
     var mouseDistX = this.x - mouseX;
@@ -256,9 +256,10 @@ function Jitter() {
 
 
     if(attracted === true) {
+
+      // Shrinks the range of bugs slowly
       this.bugRange = (this.bugRange * .99) + (150 * 0.01);
-      // this.x += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorX-this.x) * 0.005);
-      // this.y += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorY-this.y) * 0.005);
+
       this.xAnchorPoint = adjustAnchor(this.xAnchorPoint, activeAnchorX, 0.005);
       this.yAnchorPoint = adjustAnchor(this.yAnchorPoint, activeAnchorY, 0.005);
       this.x = bugXPos;
@@ -266,8 +267,6 @@ function Jitter() {
 ;
 
     } else {
-      this.x += random(-moveRandomness, moveRandomness);
-      this.y += random(-moveRandomness, moveRandomness);
 
       this.x = bugXPos;
       this.y = bugYPos;
@@ -281,7 +280,7 @@ function Jitter() {
   };
 
   this.display = function() {
-    // this.diameter = this.diameter + random(-randomness/100, randomness/100);
+
     stroke(bugOutline);
     currentDiameter = this.diameter * bugSize;
     fill(bugColor);

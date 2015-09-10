@@ -21,6 +21,9 @@
 
 #controls button {
 	margin-right: 15px;
+	background-color: rgb(50,50,50);
+	border-color: rgb(70,70,70);
+	color: rgb(200, 200, 200);
 
 }
 
@@ -34,4 +37,12 @@
 	width: 40%;
 	display: inline-block;
 	margin-right: 15px;
+}
+
+body {
+    background-color: rgb(20,20,20);
+}
+
+p {
+	color: rgb(200,200,200);
 }
