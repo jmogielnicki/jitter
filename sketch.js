@@ -15,6 +15,7 @@ var activeAnchorY = 200;
 var bugColor = [255,255,255,255]
 var bugOutline = [0,0,0,0]
 var bugSize = 1;
+var bugOverallSpeed = 100;
 
 
 
@@ -43,7 +44,8 @@ function setup() {
 
 function draw() {
   changeMode();
-  randomness = randomSlider.value()/100;
+  randomness = randomSlider.value()/1000;
+  bugOverallSpeed = randomSlider.value()/800;
   bugSize = sizeSlider.value();
 
   // Just for the shape of the 
@@ -160,6 +162,10 @@ function eraseEverything() {
   anchorList = [];
 }
 
+function adjustAnchor(current, adjustment, speed) {
+  return (current * (1 - speed)) + (adjustment * speed)
+}
+
 function Anchor() {
   this.x = mouseX;
   this.y = mouseY;
@@ -190,12 +196,30 @@ function Anchor() {
 
 // Jitter class
 function Jitter() {
+  this.xAnchorPoint = mouseX;
+  this.yAnchorPoint = mouseY;
   this.x = mouseX;
   this.y = mouseY;
+  this.bugRange = 200;
+
+  // Temp - testing perlin noise instead of randomness
+  this.perlinXStartTime = random(0,10000);
+  this.perlinYStartTime = random(0,10000);
+
+  this.bugXSpeed = random(0.005, 0.02);
+  this.bugYSpeed = random(0.0005, 0.008);
+
   this.diameter = random(2, 5);
   var attracted = false;
 
   this.move = function() {
+
+    // Temp - testing perlin noise instead of randomness
+    var perlinXValue = noise(this.perlinXStartTime);
+    var perlinYValue = noise(this.perlinYStartTime);
+    var bugXPos = map(perlinXValue, 0, 1, this.xAnchorPoint - this.bugRange, this.xAnchorPoint + this.bugRange);
+    var bugYPos = map(perlinYValue, 0, 1, this.yAnchorPoint - this.bugRange, this.yAnchorPoint + this.bugRange);
+
     var moveRandomness = randomness*abs(randomGaussian());
     var moveRandomness = randomness*abs(randomGaussian());
     var prevDistance = -1;
@@ -213,7 +237,7 @@ function Jitter() {
         activeAnchorX = anchor.x;
         activeAnchorY = anchor.y;
         prevDistance = currDistance;
-        if(currDistance<300) {
+        if(currDistance<180) {
           attracted = true;
         }
       }
@@ -229,13 +253,31 @@ function Jitter() {
       this.y += mouseRepulseY;
     };
 
+
+
     if(attracted === true) {
-      this.x += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorX-this.x) * 0.005);
-      this.y += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorY-this.y) * 0.005);
+      this.bugRange = (this.bugRange * .99) + (150 * 0.01);
+      // this.x += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorX-this.x) * 0.005);
+      // this.y += (random(-moveRandomness, moveRandomness)*.995) + ((activeAnchorY-this.y) * 0.005);
+      this.xAnchorPoint = adjustAnchor(this.xAnchorPoint, activeAnchorX, 0.005);
+      this.yAnchorPoint = adjustAnchor(this.yAnchorPoint, activeAnchorY, 0.005);
+      this.x = bugXPos;
+      this.y = bugYPos
+;
+
     } else {
       this.x += random(-moveRandomness, moveRandomness);
       this.y += random(-moveRandomness, moveRandomness);
+
+      this.x = bugXPos;
+      this.y = bugYPos;
+      // this.xAnchorPoint = adjustAnchor(this.xAnchorPoint, mouseX, 0.005);
+      // this.yAnchorPoint = adjustAnchor(this.yAnchorPoint, mouseY, 0.005);
+;
     }
+
+    this.perlinXStartTime += this.bugXSpeed * bugOverallSpeed;
+    this.perlinYStartTime += this.bugYSpeed * bugOverallSpeed;
   };
 
   this.display = function() {
