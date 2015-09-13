@@ -14,7 +14,7 @@ var activeAnchorY = 200;
 var bugColor = [255,255,255,255]
 var bugOutline = [0,0,0,0]
 var backgroundTransparency = 255;
-var bugOverallSpeed = 100;
+var bugOverallSpeed = 500;
 var fireFlyMode = false;
 
 
@@ -71,7 +71,9 @@ function draw() {
   // }
 
   // Bug creation is here, but anchor creation is in mouseClicked function to prevent multiples
-
+  if (thingType === 'bug' && onCanvas === true && (mouseIsPressed || touchIsDown)) {
+    bugList.push(new Jitter());
+  }
   
   for (i = 0; i < anchorList.length; i++) {
     anchor = anchorList[i];
@@ -105,7 +107,6 @@ function createButtons() {
   makeButtons('Bug', function() { thingType = 'bug'; });
   makeButtons('Anchor', function() { thingType = 'anchor'; });
   makeButtons('Eraser', function() { thingType = 'eraser'; });
-  makeButtons('Pusher', function() {thingType = 'repulsor'});
   makeButtons('Switch Mode', function() { changeMode();})
   makeButtons('Reset', eraseEverything);
 
@@ -120,9 +121,6 @@ function mouseClicked() {
   // Put anchor in this function so that multiples wouldn't be created
   if (thingType === 'anchor' && onCanvas === true) {
       anchorList.push(new Anchor());
-  }
-  if (thingType === 'bug' && onCanvas === true) {
-    bugList.push(new Jitter());
   }
 }
 
@@ -165,7 +163,8 @@ function eraseEverything() {
 }
 
 function adjustAnchor(current, adjustment, speed) {
-  return (current * (1 - speed)) + (adjustment * speed)
+  adjustmentSpeed = speed * bugOverallSpeed;
+  return (current * (1 - adjustmentSpeed)) + (adjustment * adjustmentSpeed)
 }
 
 function Anchor() {
@@ -233,7 +232,7 @@ function Jitter() {
   this.bugYSpeed = random(0.0005, 0.008);
 
   // Some bugs bigger, some smaller
-  this.diameter = random(2, 5);
+  this.diameter = random(1, 5);
 
   this.attracted = false;
 
@@ -248,13 +247,6 @@ function Jitter() {
 
     var prevDistance = -1;
     this.attracted = false;
-
-    var mouseDistX = this.x - mouseX;
-    var mouseDistY = this.y - mouseY;
-    var mouseDist = dist(mouseX, mouseY, this.x, this.y);
-
-    var mouseRepulseX = 30/mouseDistX;
-    var mouseRepulseY = 30/mouseDistY;
 
     // Starting the blink
     this.blinkTimer--;
@@ -296,11 +288,6 @@ function Jitter() {
       activeAnchorX = this.x;
       activeAnchorY = this.y;
     }
-
-    if(thingType === 'repulsor' && mouseDist < 60) {
-      this.x += mouseRepulseX;
-      this.y += mouseRepulseY;
-    };
 
 
 
