@@ -14,9 +14,8 @@ var activeAnchorY = 200;
 var bugColor = [255,255,255,255]
 var bugOutline = [0,0,0,0]
 var backgroundTransparency = 255;
-var bugSize = 1;
 var bugOverallSpeed = 100;
-
+var fireFlyMode = false;
 
 
 function setup() {
@@ -30,7 +29,8 @@ function setup() {
   bug = new Jitter();
 
   // Make cursor disappear when in canvas
-  noCursor();
+  // noCursor();
+  cursor(CROSS);
 
   // Create the buttons
   createButtons();
@@ -40,46 +40,38 @@ function setup() {
   randomSlider.parent('sliders');
   randomSlider.html('randomness');
 
-  sizeSlider = createSlider(1, 50, 1)
-  sizeSlider.parent('sliders');
-  sizeSlider.html('size');
 }
 
 function draw() {
   fill(20, 20, 20, backgroundTransparency);
   rect(-1, -1, width+2, height+2);
   bugOverallSpeed = randomSlider.value()/800;
-  bugSize = sizeSlider.value();
 
-  // Just for the shape of the 
-  switch(thingType) {
-    case 'bug':
-      fill(250,250,250,150);
-      ellipse(mouseX, mouseY, 8, 8);
-      break;
-    case 'anchor':
-      fill(0,0,0);
-      ellipse(mouseX, mouseY, 25, 25);
-      break;
-    case 'eraser':
-      fill(255,255,255);
-      rectMode(CENTER);
-      rect(mouseX, mouseY, 40, 40);
-      break;
-    case 'repulsor':
-      fill(255, 255, 255, 20);
-      stroke(255, 255, 255, 150)
-      ellipse(mouseX, mouseY, 60, 60);
-      noStroke();
-      break;
-  }
+  // Just for the shape of the cursor.  R
+  // switch(thingType) {
+  //   case 'bug':
+  //     fill(250,250,250,150);
+  //     ellipse(mouseX, mouseY, 8, 8);
+  //     break;
+  //   case 'anchor':
+  //     fill(0,0,0);
+  //     ellipse(mouseX, mouseY, 25, 25);
+  //     break;
+  //   case 'eraser':
+  //     fill(255,255,255);
+  //     rectMode(CENTER);
+  //     rect(mouseX, mouseY, 40, 40);
+  //     break;
+  //   case 'repulsor':
+  //     fill(255, 255, 255, 20);
+  //     stroke(255, 255, 255, 150)
+  //     ellipse(mouseX, mouseY, 60, 60);
+  //     noStroke();
+  //     break;
+  // }
 
   // Bug creation is here, but anchor creation is in mouseClicked function to prevent multiples
-  if (mouseIsPressed && onCanvas === true) {
-    if (thingType === 'bug') {
-      bugList.push(new Jitter());
-    } 
-  }
+
   
   for (i = 0; i < anchorList.length; i++) {
     anchor = anchorList[i];
@@ -129,37 +121,47 @@ function mouseClicked() {
   if (thingType === 'anchor' && onCanvas === true) {
       anchorList.push(new Anchor());
   }
+  if (thingType === 'bug' && onCanvas === true) {
+    bugList.push(new Jitter());
+  }
 }
 
 function changeMode() {
   modeCurrent++;
-  if (modeCurrent > 2) {
+  if (modeCurrent > 3) {
     modeCurrent = 0;
   } 
   if (modeCurrent === 0) {
     backgroundTransparency = 255;
     bugOutline = [0, 0, 0, 0]
-    bugColor = [255,255,255,230]
+    bugColor = [255,255,255,255]
+    fireFlyMode = false;
   } else if (modeCurrent === 1) {
     backgroundTransparency = 30;
     bugOutline = [50, 50, 50, 255]
-    bugColor = [255,255,255,230]
-    // fill(255, 10); // semi-transparent white
-    // rect(-1, -1, width+2, height+2);
+    bugColor = [255,255,255,255]
+    fireFlyMode = false;
   } else if (modeCurrent === 2) {
     backgroundTransparency = 0;
     bugOutline = [50, 50, 50, 255]
-    bugColor = [255,255,255,230]
-    // fill(0, 100); 
-    // rect(0, 0, width, height);
-    }
+    bugColor = [255,255,255,255]
+    fireFlyMode = false;
+  } else if (modeCurrent === 3) {
+    backgroundTransparency = 255;
+    bugOutline = [0, 0, 0, 0]
+    bugColor = [255,255,255,255]
+    fireFlyMode = true;
+  }
 
 };
 
 function eraseEverything() {
-  modeCurrent = 0;
   bugList = [];
   anchorList = [];
+  modeCurrent = 3;
+  changeMode();
+
+
 }
 
 function adjustAnchor(current, adjustment, speed) {
@@ -197,38 +199,85 @@ function Anchor() {
 
 // Jitter class
 function Jitter() {
+
+  // AnchorPoints are whatever the current middle of the box is, targetAnchors are where we want the next middlepoint to be
   this.xAnchorPoint = mouseX;
   this.yAnchorPoint = mouseY;
+
+  // This is meant to be a future anchorpoint that the current anchorpoint will move towards
+  this.targetXAnchor = mouseX;
+  this.targetYAnchor = mouseY;
+
   this.x = mouseX;
   this.y = mouseY;
+
+  // Firefly settings for the bug
+  this.blinkSpan = random(50, 200);
+  this.blinkTimer = random(100, 2000);
+  this.blinkOn = false;
+
+  this.colored = bugColor;
+
+  // Defines how far the bug will roam from AnchorPoints
   this.bugRange = 200;
 
+  // How long do we wait when target and anchorpoint are within range before changing target, different per bug
   this.moveTimer = random(100, 1000);
 
-  // Temp - testing perlin noise instead of randomness
+  // Start each bug at a different point in time along perlin path
   this.perlinXStartTime = random(0,10000);
   this.perlinYStartTime = random(0,10000);
 
+  // Some bugs are faster, some slower
   this.bugXSpeed = random(0.005, 0.02);
   this.bugYSpeed = random(0.0005, 0.008);
 
+  // Some bugs bigger, some smaller
   this.diameter = random(2, 5);
-  var attracted = false;
+
+  this.attracted = false;
 
   this.move = function() {
 
     var perlinXValue = noise(this.perlinXStartTime);
     var perlinYValue = noise(this.perlinYStartTime);
+
+    // bugXPos is the position of the bug within the box defined by xAnchorPoint/yAnchorPoint
     var bugXPos = map(perlinXValue, 0, 1, this.xAnchorPoint - this.bugRange, this.xAnchorPoint + this.bugRange);
     var bugYPos = map(perlinYValue, 0, 1, this.yAnchorPoint - this.bugRange, this.yAnchorPoint + this.bugRange);
 
     var prevDistance = -1;
-    var attracted = false;
+    this.attracted = false;
+
     var mouseDistX = this.x - mouseX;
     var mouseDistY = this.y - mouseY;
     var mouseDist = dist(mouseX, mouseY, this.x, this.y);
+
     var mouseRepulseX = 30/mouseDistX;
     var mouseRepulseY = 30/mouseDistY;
+
+    // Starting the blink
+    this.blinkTimer--;
+    if (this.blinkTimer < 1) {
+      this.blinkOn = true;
+      this.blinkSpan--;
+    }
+    if (this.blinkSpan < 1) {
+      this.blinkSpan = random(20, 100);
+      this.blinkTimer = random(100, 1000);
+      this.blinkOn = false;
+    }
+
+    // If the anchor and target are close, start the timer
+    if (dist(this.xAnchorPoint, this.yAnchorPoint, this.targetXAnchor, this.targetYAnchor) < 5) {
+      this.moveTimer--;
+    }
+    // When timer goes off, move the target anchor and restart the timer
+    if (this.moveTimer < 1) {
+      this.targetXAnchor = random(0, width);
+      this.targetYAnchor = random(0, height);
+      this.moveTimer = random(100, 1000);
+    }
 
     for (var i = 0; i < anchorList.length; i++) {
       anchor = anchorList[i];
@@ -238,7 +287,7 @@ function Jitter() {
         activeAnchorY = anchor.y;
         prevDistance = currDistance;
         if(currDistance<180) {
-          attracted = true;
+          this.attracted = true;
         }
       }
     }
@@ -255,25 +304,21 @@ function Jitter() {
 
 
 
-    if(attracted === true) {
+    if(this.attracted === true) {
 
       // Shrinks the range of bugs slowly
       this.bugRange = (this.bugRange * .99) + (150 * 0.01);
 
-      this.xAnchorPoint = adjustAnchor(this.xAnchorPoint, activeAnchorX, 0.005);
-      this.yAnchorPoint = adjustAnchor(this.yAnchorPoint, activeAnchorY, 0.005);
-      this.x = bugXPos;
-      this.y = bugYPos
-;
-
-    } else {
-
-      this.x = bugXPos;
-      this.y = bugYPos;
-      // this.xAnchorPoint = adjustAnchor(this.xAnchorPoint, mouseX, 0.005);
-      // this.yAnchorPoint = adjustAnchor(this.yAnchorPoint, mouseY, 0.005);
-;
+      this.targetXAnchor = activeAnchorX;
+      this.targetYAnchor = activeAnchorY;
     }
+
+    this.xAnchorPoint = adjustAnchor(this.xAnchorPoint, this.targetXAnchor, 0.005);
+    this.yAnchorPoint = adjustAnchor(this.yAnchorPoint, this.targetYAnchor, 0.005);
+
+    this.x = bugXPos;
+    this.y = bugYPos;
+
 
     this.perlinXStartTime += this.bugXSpeed * bugOverallSpeed;
     this.perlinYStartTime += this.bugYSpeed * bugOverallSpeed;
@@ -281,9 +326,20 @@ function Jitter() {
 
   this.display = function() {
 
+    this.colored = bugColor;
+    if (fireFlyMode === true) {
+
+      if (this.blinkOn === false) {
+        this.colored = [30,30,30,255];
+      } else {
+        this.colored = bugColor;
+      }
+    }
+
+
     stroke(bugOutline);
-    currentDiameter = this.diameter * bugSize;
-    fill(bugColor);
+    currentDiameter = this.diameter;
+    fill(this.colored);
     ellipse(this.x, this.y, currentDiameter, currentDiameter);
 
   }
