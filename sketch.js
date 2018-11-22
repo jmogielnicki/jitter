@@ -3,7 +3,7 @@ var bug;  // Declare object
 var bugList = [];
 var anchorList = [];
 var eraseAllButton;
-var thingType = 'bug';
+var thingType = 'insect';
 var randomSlider;
 var onCanvas;
 var switchModeButton;
@@ -47,21 +47,23 @@ function setup() {
   randomSlider = createSlider(1, 1000, 500);
   randomSlider.parent('sliders');
   randomSlider.html('randomness');
-  
+
 }
 
 function draw() {
   fill(20, 20, 20, backgroundTransparency);
   rect(-1, -1, width+2, height+2);
-  bugOverallSpeed = randomSlider.value()/800;
+  bugOverallSpeed = map(randomSlider.value(), 1, 1000, 0.001, 1.5);
+  soundRate = map(randomSlider.value(), 1, 1000, 0.001, 2);
+  peepers.rate(soundRate);
 
   // Bug creation is here, but anchor creation is in mouseClicked function to prevent multiples
-  if (thingType === 'bug' && onCanvas === true && (mouseIsPressed)) {
+  if (thingType === 'insect' && onCanvas === true && (mouseIsPressed)) {
     if (bugDelayCount === 0) {
       bugList.push(new Jitter());
     }
     bugDelayCount++;
-    if (bugDelayCount > 3) {
+    if (bugDelayCount > 1) {
       bugDelayCount = 0;
     }
   }
@@ -70,7 +72,7 @@ function draw() {
   if (bugList.length > 400) {
     bugList.shift()
   }
-  
+
   for (i = 0; i < anchorList.length; i++) {
     anchor = anchorList[i];
     anchor.display();
@@ -109,7 +111,7 @@ function createButtons() {
   var plusIcon = "<i class='fa fa-plus'></i>"
   var soundIcon = "<i class='fa fa-lg fa-volume-off'></i>"
 
-  makeButtons('Bug', 'items', selectMode, plusIcon);
+  makeButtons('Insect', 'items', selectMode, plusIcon);
   makeButtons('Light', 'items', selectMode, plusIcon);
   makeButtons('Eraser', 'items', selectMode);
   makeButtons('Switch Mode', 'controls', changeMode);
@@ -129,12 +131,12 @@ function removeActiveClass() {
   var currentActiveButton = $('.active');
   if (currentActiveButton.length > 0) {
     currentActiveButton.removeClass('active');
-  } 
+  }
 }
 
 function makeBugButtonActive() {
   removeActiveClass();
-  var bugButton = $("button:contains('Bug')");
+  var bugButton = $("button:contains('Insect')");
   bugButton.addClass('active');
 }
 
@@ -168,7 +170,7 @@ function changeMode() {
   modeCurrent++;
   if (modeCurrent > 3) {
     modeCurrent = 0;
-  } 
+  }
   if (modeCurrent === 0) {
     backgroundTransparency = 255;
     bugOutline = [0, 0, 0, 0]
@@ -198,7 +200,7 @@ function eraseEverything() {
   anchorList = [];
   modeCurrent = 3;
   changeMode();
-  thingType = 'bug';
+  thingType = 'insect';
   makeBugButtonActive();
 }
 
