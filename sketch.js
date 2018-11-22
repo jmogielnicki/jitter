@@ -27,7 +27,7 @@ function preload() {
 
 function setup() {
   peepers.setVolume(0.1);
-  peepers.loop();
+  // peepers.loop();
   // Canvas stuffs
   canvas = createCanvas(windowWidth-100, windowHeight-110);
   canvas.parent('canvasContainer');
