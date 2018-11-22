@@ -68,7 +68,7 @@ function draw() {
     }
   }
 
-  // Keeping number of bugs at 300.  Using shift to remove first bug in array (which was first created)
+  // Keeping number of bugs at 300. Using shift to remove first bug in array (which was first created)
   if (bugList.length > 400) {
     bugList.shift()
   }
