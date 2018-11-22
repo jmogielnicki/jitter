@@ -17,7 +17,7 @@ var backgroundTransparency = 255;
 var bugOverallSpeed = 500;
 var fireFlyMode = false;
 var bugDelayCount = 0;
-var soundOn = true;
+var soundOn = false;
 
 
 function preload() {
@@ -56,7 +56,7 @@ function draw() {
   bugOverallSpeed = randomSlider.value()/800;
 
   // Bug creation is here, but anchor creation is in mouseClicked function to prevent multiples
-  if (thingType === 'bug' && onCanvas === true && (mouseIsPressed || touchIsDown)) {
+  if (thingType === 'bug' && onCanvas === true && (mouseIsPressed)) {
     if (bugDelayCount === 0) {
       bugList.push(new Jitter());
     }
@@ -107,7 +107,7 @@ function makeButtons (text, classType, method, icon) {
 
 function createButtons() {
   var plusIcon = "<i class='fa fa-plus'></i>"
-  var soundIcon = "<i class='fa fa-lg fa-volume-up'></i>"
+  var soundIcon = "<i class='fa fa-lg fa-volume-off'></i>"
 
   makeButtons('Bug', 'items', selectMode, plusIcon);
   makeButtons('Light', 'items', selectMode, plusIcon);
